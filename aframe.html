@@ -26,7 +26,7 @@
       <a-entity id="links" link-box> </a-entity>
 
       <!-- Camera + cursor. -->
-      <a-entity id="camera" rotation="0 -30 0"
+      <a-entity id="camera" rotation-reader rotation="0 -30 0"
         ><a-camera position="0 0 0"></a-camera
       ></a-entity>
     </a-scene>
@@ -35,19 +35,20 @@
       var links = document.getElementById("links");
       var sky = document.getElementById("image-360");
       var background = document.getElementById("background");
+      var camera = document.getElementById("camera");
       var scene = 0;
       var datas = [
         {
           scene: 0,
           bgData: "images/demo1.jpg",
-          position: ["3 -2 -5", "3 0 0"],
-          gotoScene: [0, 1],
+          position: ["3 -2 -5", "3 0 0", "2 -2 -2"],
+          gotoScene: [0, 1, 1],
         },
         {
           scene: 1,
           bgData: "images/demo2.jpg",
-          position: ["2 -2 -2", "0 -2 -5"],
-          gotoScene: [1, 0],
+          position: ["3 -2 -5", "3 0 0", "1 -1.2 -5"],
+          gotoScene: [1, 0, 0],
         },
       ];
 
@@ -116,6 +117,8 @@
 
           links.insertAdjacentHTML("afterbegin", template);
         });
+
+        camera.object3D.rotation.set(0, 0, 0);
       }
     </script>
   </body>
