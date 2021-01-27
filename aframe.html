@@ -1,0 +1,122 @@
+<html>
+  <head>
+    <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-event-set-component@5/dist/aframe-event-set-component.min.js"></script>
+    <script src="https://unpkg.com/aframe-layout-component@5.3.0/dist/aframe-layout-component.min.js"></script>
+    <script src="https://unpkg.com/aframe-template-component@3.2.1/dist/aframe-template-component.min.js"></script>
+    <script src="https://unpkg.com/aframe-proxy-event-component@2.1.0/dist/aframe-proxy-event-component.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aframe-gif-component@0.2.0/dist/aframe-gif-component.min.js"></script>
+  </head>
+  <body>
+    <a-scene vr-mode-ui="enabled: false" cursor="rayOrigin: mouse">
+      <a-assets>
+        <img id="background" crossorigin="anonymous" src="images/demo1.jpg" />
+        <img id="thumb" crossorigin="anonymous" src="images/thumb.jpg" />
+      </a-assets>
+
+      <!-- 360-degree image. -->
+      <a-sky
+        id="image-360"
+        radius="10"
+        src="images/demo1.jpg"
+        animation__fade="property: components.material.material.color; type: color; from: #FFF; to: #000; dur: 300; startEvents: fade"
+        animation__fadeback="property: components.material.material.color; type: color; from: #000; to: #FFF; dur: 300; startEvents: animationcomplete__fade"
+      ></a-sky>
+
+      <a-entity id="links" link-box> </a-entity>
+
+      <!-- Camera + cursor. -->
+      <a-entity id="camera" rotation="0 -30 0"
+        ><a-camera position="0 0 0"></a-camera
+      ></a-entity>
+    </a-scene>
+
+    <script>
+      var links = document.getElementById("links");
+      var sky = document.getElementById("image-360");
+      var background = document.getElementById("background");
+      var scene = 0;
+      var datas = [
+        {
+          scene: 0,
+          bgData: "images/demo1.jpg",
+          position: ["3 -2 -5", "3 0 0"],
+          gotoScene: [0, 1],
+        },
+        {
+          scene: 1,
+          bgData: "images/demo2.jpg",
+          position: ["2 -2 -2", "0 -2 -5"],
+          gotoScene: [1, 0],
+        },
+      ];
+
+      AFRAME.registerComponent("link-box", {
+        schema: {
+          target: {
+            type: "selector",
+            default: "",
+          },
+          default: {
+            type: "string",
+            default: "#city",
+          },
+        },
+        init: function () {
+          var target = this.data.target;
+          var el = this.el;
+
+          setPostion(datas);
+        },
+        update: function () {},
+      });
+
+      AFRAME.registerComponent("btn-link", {
+        schema: {
+          default: {
+            type: "string",
+            default: datas[scene].bg,
+          },
+        },
+        update: function () {
+          var el = this.el;
+          var data = this.data;
+
+          el.addEventListener("click", function () {
+            sky.emit("fade");
+            scene = data;
+            sky.setAttribute("src", datas[data].bgData);
+            console.log("scene:" + scene);
+            links.innerHTML = "";
+            setPostion(datas);
+          });
+
+          el.addEventListener("mouseenter", function () {
+            el.emit("in");
+          });
+          el.addEventListener("mouseleave", function () {
+            el.emit("out");
+          });
+        },
+      });
+
+      function setPostion(datas) {
+        links.setAttribute("scene", scene);
+        datas[scene].position.forEach((val, idx) => {
+          let newEl = document.createElement("a-entity");
+          let template = `
+            <a-entity geometry="primitive: box; height: 1; width: 1"
+            material="shader: flat; src: #thumb"
+            layout="type: line; margin: 1.5"
+            position="${val}"
+            id="thumb-click${scene}-${idx}"
+            btn-link="${datas[scene].gotoScene[idx]}"
+            animation__in="startEvents: in;property: scale; dur: 200; from: 1 1 1; to: 1.2 1.2 1.2"
+            animation__out="startEvents: out;property: scale; dur: 200; from: 1.2 1.2 1.2; to: 1 1 1"></a-entity>`;
+
+          links.insertAdjacentHTML("afterbegin", template);
+        });
+      }
+    </script>
+  </body>
+</html>

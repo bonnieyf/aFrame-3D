@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/92/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r92/examples/js/loaders/GLTFLoader.js"></script>
+  </head>
+  <body>
+    <iframe
+      id="webgl_iframe"
+      frameborder="0"
+      allow="autoplay; fullscreen; vr"
+      allowfullscreen=""
+      allowvr=""
+      mozallowfullscreen="true"
+      src="https://play.unity3dusercontent.com/webgl/1c902cb7-9bcb-48ae-ac69-01231902c5a6?screenshot=false&embedType=embed"
+      width="810"
+      height="640"
+      onmousewheel=""
+      webkitallowfullscreen="true"
+    ></iframe>
+
+    <script type="module">
+      var scene, renderer;
+      var camera;
+      var mesh;
+
+      var isMouseDown = false;
+
+      var PSV = (scene = new THREE.Scene());
+      scene.background = new THREE.Color(0xff5f0f);
+      camera = new THREE.PerspectiveCamera(
+        50,
+        window.innerWidth / window.innerHeight
+      );
+      camera.position.set(0, 0, 5);
+
+      renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+      renderer.setClearColor(0x00ffff, 1);
+      renderer.gammaOutput = true;
+
+      var light = new THREE.DirectionalLight("#c1582d", 1);
+      var ambient = new THREE.AmbientLight("#85b2cd");
+      light.position.set(0, -70, 100).normalize();
+      scene.add(light);
+      scene.add(ambient);
+
+      var texture = new THREE.Texture();
+      var manager = new THREE.LoadingManager();
+      manager.onProgress = function (item, loaded, total) {};
+      var onProgress = function (xhr) {};
+      var onError = function (xhr) {};
+
+      var loader = new THREE.GLTFLoader();
+
+      loader.load(
+        "3dmodule/car/scene.gltf",
+        function (gltf) {
+          mesh = gltf.scene;
+          mesh.scale.set(10, 10, 10);
+          scene.add(mesh);
+          scene.add(gltf.scene);
+        },
+        function (xhr) {
+          console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
+        },
+        // called when loading has errors
+        function (error) {
+          console.log("An error happened");
+        }
+      );
+
+      document.addEventListener("mousedown", onMouseDown);
+      document.addEventListener("touchstart", onMouseDown);
+      document.addEventListener("mouseup", onMouseUp);
+      document.addEventListener("touchend", onMouseUp);
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("touchmove", onMouseMove);
+
+      render();
+
+      function render() {
+        requestAnimationFrame(render);
+        renderer.render(scene, camera);
+      }
+
+      // マウスを押したとき
+      function onMouseDown(event) {
+        isMouseDown = true;
+      }
+
+      // マウスを動かした時
+      function onMouseMove(event) {
+        if (isMouseDown) {
+          // 3DモデルをX軸とY軸方向に回転させます
+          if (mesh) {
+            mesh.rotation.y = getMouseX(event) / 50;
+            mesh.rotation.x = getMouseY(event) / 50;
+          }
+        }
+      }
+
+      // マウスを離したとき
+      function onMouseUp(event) {
+        isMouseDown = false;
+      }
+
+      function getMouseX(event) {
+        if (event.type.indexOf("touch") == -1) return event.clientX;
+        else return event.touches[0].clientX;
+      }
+
+      function getMouseY(event) {
+        if (event.type.indexOf("touch") == -1) return event.clientY;
+        else return event.touches[0].clientY;
+      }
+    </script>
+  </body>
+</html>
