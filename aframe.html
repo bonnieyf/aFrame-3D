@@ -26,9 +26,11 @@
       <a-entity id="links" link-box> </a-entity>
 
       <!-- Camera + cursor. -->
-      <a-entity id="camera" rotation-reader rotation="0 -30 0"
-        ><a-camera position="0 0 0"></a-camera
-      ></a-entity>
+      <a-camera
+        id="camera"
+        no-click-look-controls
+        position="-3 1 -0.5"
+      ></a-camera>
     </a-scene>
 
     <script>
@@ -41,14 +43,18 @@
         {
           scene: 0,
           bgData: "images/demo1.jpg",
-          position: ["3 -2 -5", "3 0 0", "2 -2 -2"],
+          position: ["3 -2 -5", "3 0 0"],
           gotoScene: [0, 1, 1],
+          rotation: { x: 0, y: -39 },
+          caPos: { x: -3, y: 1, z: -0.5 },
         },
         {
           scene: 1,
           bgData: "images/demo2.jpg",
           position: ["3 -2 -5", "3 0 0", "1 -1.2 -5"],
           gotoScene: [1, 0, 0],
+          rotation: { x: 0, y: -1.8 },
+          caPos: { x: 0, y: 0, z: 0 },
         },
       ];
 
@@ -90,6 +96,18 @@
             console.log("scene:" + scene);
             links.innerHTML = "";
             setPostion(datas);
+            let rotate = datas[data].rotation;
+            let position = datas[data].caPos;
+            camera.setAttribute("look-controls", { enabled: false });
+            camera.setAttribute("position", {
+              x: position.x,
+              y: position.y,
+              z: position.z,
+            });
+            camera.components["look-controls"].pitchObject.rotation.x =
+              rotate.x;
+            camera.components["look-controls"].yawObject.rotation.y = rotate.y;
+            camera.setAttribute("look-controls", { enabled: true });
           });
 
           el.addEventListener("mouseenter", function () {
@@ -117,9 +135,51 @@
 
           links.insertAdjacentHTML("afterbegin", template);
         });
-
-        camera.object3D.rotation.set(0, 0, 0);
       }
+
+      AFRAME.registerComponent("camera-logger", {
+        schema: {
+          timestamp: { type: "int" },
+          seconds: { type: "int" }, // default 0
+        },
+
+        log: function () {
+          var cameraEl = this.el.sceneEl.camera.el;
+          var rotation = cameraEl.getAttribute("rotation");
+          var worldPos = new THREE.Vector3();
+          worldPos.setFromMatrixPosition(cameraEl.object3D.matrixWorld);
+          // console.log(
+          //   "Time: " +
+          //     this.data.seconds +
+          //     "; Camera Position: (" +
+          //     worldPos.x.toFixed(2) +
+          //     ", " +
+          //     worldPos.y.toFixed(2) +
+          //     ", " +
+          //     worldPos.z.toFixed(2) +
+          //     "); Camera Rotation: (" +
+          //     rotation.x.toFixed(2) +
+          //     ", " +
+          //     rotation.y.toFixed(2) +
+          //     ", " +
+          //     rotation.z.toFixed(2) +
+          //     ")"
+          // );
+        },
+
+        play: function () {
+          this.data.timestamp = Date.now();
+          this.log();
+        },
+
+        tick: function () {
+          if (Date.now() - this.data.timestamp > 1000) {
+            this.data.timestamp += 1000;
+            this.data.seconds += 1;
+            this.log();
+          }
+        },
+      });
     </script>
   </body>
 </html>
