@@ -6,6 +6,51 @@
     <script src="https://unpkg.com/aframe-template-component@3.2.1/dist/aframe-template-component.min.js"></script>
     <script src="https://unpkg.com/aframe-proxy-event-component@2.1.0/dist/aframe-proxy-event-component.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/aframe-gif-component@0.2.0/dist/aframe-gif-component.min.js"></script>
+    <link rel="stylesheet" href="css/all.css" />
+    <style>
+      #popupbox {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translateX(-50%) translateY(-50%);
+        width: 500px;
+        height: auto;
+        padding: 30px;
+        background-color: #000;
+        z-index: 2000;
+        color: #ffffff;
+        font-size: 20px;
+        line-height: 1.5;
+        box-shadow: 10px 10px 30px rgba(0, 0, 0, 0.5);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        display: none;
+        opacity: 0;
+      }
+
+      #popupbox h2 {
+        display: block;
+        margin: 0;
+      }
+
+      #popupbox p {
+        margin-top: 0;
+      }
+
+      #popupbox .close {
+        float: right;
+        overflow: hidden;
+        font-size: 30px;
+      }
+      #popupbox iframe {
+        width: 100%;
+        border: 1px solid #ffffff;
+      }
+      #popupbox a {
+        color: #ffffff;
+        font-size: 20px;
+        text-decoration: none;
+      }
+    </style>
   </head>
   <body>
     <a-scene vr-mode-ui="enabled: false" cursor="rayOrigin: mouse">
@@ -23,7 +68,53 @@
         animation__fadeback="property: components.material.material.color; type: color; from: #000; to: #FFF; dur: 300; startEvents: animationcomplete__fade"
       ></a-sky>
 
-      <a-entity id="links" link-box> </a-entity>
+      <a-cylinder
+        change-color-on-click
+        color="#000"
+        radius="0.3"
+        height="0.2"
+        position="3 -0.5 -5"
+        rotation="0 0 90"
+      >
+        <a-text
+          value="<<"
+          color="#ffffff"
+          position="-0.25 0.1 0"
+          rotation="-90 0 0"
+          width="10"
+        ></a-text>
+      </a-cylinder>
+
+      <a-entity
+        id="links"
+        link-box
+        data-template='<h2>Hello world</h2>
+        <span>This is Test description...</span>
+        <iframe
+          width="560"
+          height="315"
+          src="https://www.youtube.com/embed/kXeBsuO3D10"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+        ></iframe>'
+      ></a-entity>
+
+      <div id="popupbox">
+        <div class="close"><i class="far fa-times-circle"></i></div>
+        <div class="content">
+          <h2>Hello world</h2>
+          <p>This is Test description...</p>
+          <iframe
+            width="560"
+            height="315"
+            src="https://www.youtube.com/embed/kXeBsuO3D10"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </div>
 
       <!-- Camera + cursor. -->
       <a-camera
@@ -137,49 +228,90 @@
         });
       }
 
-      AFRAME.registerComponent("camera-logger", {
-        schema: {
-          timestamp: { type: "int" },
-          seconds: { type: "int" }, // default 0
-        },
+      AFRAME.registerComponent("change-color-on-click", {
+        init: function () {
+          this.el.addEventListener("click", function (evt) {
+            let popupbox = document.getElementById("popupbox");
+            fadeIn(popupbox);
+          });
 
-        log: function () {
-          var cameraEl = this.el.sceneEl.camera.el;
-          var rotation = cameraEl.getAttribute("rotation");
-          var worldPos = new THREE.Vector3();
-          worldPos.setFromMatrixPosition(cameraEl.object3D.matrixWorld);
-          // console.log(
-          //   "Time: " +
-          //     this.data.seconds +
-          //     "; Camera Position: (" +
-          //     worldPos.x.toFixed(2) +
-          //     ", " +
-          //     worldPos.y.toFixed(2) +
-          //     ", " +
-          //     worldPos.z.toFixed(2) +
-          //     "); Camera Rotation: (" +
-          //     rotation.x.toFixed(2) +
-          //     ", " +
-          //     rotation.y.toFixed(2) +
-          //     ", " +
-          //     rotation.z.toFixed(2) +
-          //     ")"
-          // );
-        },
-
-        play: function () {
-          this.data.timestamp = Date.now();
-          this.log();
-        },
-
-        tick: function () {
-          if (Date.now() - this.data.timestamp > 1000) {
-            this.data.timestamp += 1000;
-            this.data.seconds += 1;
-            this.log();
-          }
+          document
+            .querySelector(".close")
+            .addEventListener("click", function () {
+              let popupbox = document.getElementById("popupbox");
+              fadeOut(popupbox);
+            });
         },
       });
+
+      function fadeOut(element) {
+        var op = 1; // initial opacity
+        var timer = setInterval(function () {
+          if (op <= 0.1) {
+            clearInterval(timer);
+            element.style.display = "none";
+          }
+          element.style.opacity = op;
+          element.style.filter = "alpha(opacity=" + op * 100 + ")";
+          op -= op * 0.1;
+        }, 10);
+      }
+
+      function fadeIn(element) {
+        var op = 0.1; // initial opacity
+        element.style.display = "block";
+        var timer = setInterval(function () {
+          if (op >= 1) {
+            clearInterval(timer);
+          }
+          element.style.opacity = op;
+          element.style.filter = `alpha(opcity=${op * 100})`;
+          op += op * 0.1;
+        }, 10);
+      }
+      // AFRAME.registerComponent("camera-logger", {
+      //   schema: {
+      //     timestamp: { type: "int" },
+      //     seconds: { type: "int" }, // default 0
+      //   },
+
+      //   log: function () {
+      //     var cameraEl = this.el.sceneEl.camera.el;
+      //     var rotation = cameraEl.getAttribute("rotation");
+      //     var worldPos = new THREE.Vector3();
+      //     worldPos.setFromMatrixPosition(cameraEl.object3D.matrixWorld);
+      //     // console.log(
+      //     //   "Time: " +
+      //     //     this.data.seconds +
+      //     //     "; Camera Position: (" +
+      //     //     worldPos.x.toFixed(2) +
+      //     //     ", " +
+      //     //     worldPos.y.toFixed(2) +
+      //     //     ", " +
+      //     //     worldPos.z.toFixed(2) +
+      //     //     "); Camera Rotation: (" +
+      //     //     rotation.x.toFixed(2) +
+      //     //     ", " +
+      //     //     rotation.y.toFixed(2) +
+      //     //     ", " +
+      //     //     rotation.z.toFixed(2) +
+      //     //     ")"
+      //     // );
+      //   },
+
+      //   play: function () {
+      //     this.data.timestamp = Date.now();
+      //     this.log();
+      //   },
+
+      //   tick: function () {
+      //     if (Date.now() - this.data.timestamp > 1000) {
+      //       this.data.timestamp += 1000;
+      //       this.data.seconds += 1;
+      //       this.log();
+      //     }
+      //   },
+      // });
     </script>
   </body>
 </html>
